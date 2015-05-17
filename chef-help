@@ -1,0 +1,4 @@
+##!/bin/bash
+SCRIPT_ROOT=$(dirname "${BASH_SOURCE}")
+export RESOURCE_NAME=$1
+chef-apply "$SCRIPT_ROOT/chef-help.rb"
