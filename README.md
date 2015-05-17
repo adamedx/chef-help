@@ -56,6 +56,7 @@ This will return the following output:
 
 ```
 * Resource: group
+  - Chef Version: 12.3.0
   + Attributes:
     - append FalseClass
     - excluded_members Array
@@ -105,6 +106,8 @@ implementation might include the following:
 * Re-packaging this tool as a gem, `knife` plugin, or subcommand in
   Chef-DK's `chef` command would make it easier to acquire and install
   this tool.
+* The tool has no tests -- this could be easier if the tool were
+  repackaged in a gem or Chef extension as suggested above.
 * Additional features to display the operating systems on which th
   resource is available along with any other prerequisits would reduce the need to visit the web site.
   This can be done by takking advantage of provider mapping

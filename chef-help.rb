@@ -23,7 +23,7 @@ module ::ChefHelp
   # We look for arguments via environment variable since chef-apply
   # gets the arguments and we can't add our own there
   def self.target_resource
-    ENV['RESOURCE_NAME']
+    ENV['CHEFHELP_RESOURCE_NAME']
   end
 
   if target_resource.nil? || target_resource.length <= 0
@@ -39,12 +39,12 @@ module ::ChefHelp
   end
 
   def self.resource_display
-    colorizer = HighLine.new
-    puts "\n* Resource: #{colorizer.color(self.target_resource, :green)}"
-
     Proc.new do
+      colorizer = HighLine.new
+      puts "\n* Resource: #{colorizer.color(::ChefHelp.target_resource, :green)}"
       action :nothing
 
+      puts "  - Chef Version: #{::Chef::VERSION}"
       puts "  + Attributes:"
 
       (self.methods - ::Chef::Resource.instance_methods).sort.each do | attribute |
@@ -69,5 +69,10 @@ module ::ChefHelp
   end
 end
 
-self.send(::ChefHelp.target_resource, 'resource_help', &(::ChefHelp.resource_display))
+begin
+  self.send(::ChefHelp.target_resource, 'resource_help', &(::ChefHelp.resource_display))
+rescue NoMethodError
+  colorizer = HighLine.new
+  $stderr.puts "#{colorizer.color('Error: specified resource \'', :red)}#{colorizer.color(::ChefHelp.target_resource, :red)}#{colorizer.color('\' was not found.', :red)}"
+end
 puts
