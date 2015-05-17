@@ -39,7 +39,7 @@ repository:
 Alternatively, you can *source* the appropriate script in your shell
 profile, reference the script via a symbolic link from one of the
 directories listed in the `$PATH` environment variable, or update
-`$PATH` to include the directory into which this repository was cloned
+`$PATH` to include the directory into which this repository was cloned.
 
 ## Usage
 
