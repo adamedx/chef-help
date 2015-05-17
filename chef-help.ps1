@@ -18,7 +18,7 @@ function chef-help($resource='')
     try
     {
         si env:logonserver "\\$env:computername"
-        start-process 'chef-apply' -argumentlist "$psscriptroot\chef-help.rb" -wait
+        start-process 'chef-apply' -argumentlist "$psscriptroot\chef-help.rb" -wait -nonewwindow
     }
     finally
     {
