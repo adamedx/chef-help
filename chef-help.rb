@@ -13,66 +13,85 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This is a script to dump information about resources. It requires
-# that it is executed in Chef recipe context, specifically the context
-# of passing a file to chef-apply to execute as a recipe.
+# This is a script to dump information about resources. It assumes
+# that the chef gem is installed.
 
-module ::ChefHelp
-  require 'highline'
+require 'chef'
+require 'highline'
 
-  # We look for arguments via environment variable since chef-apply
-  # gets the arguments and we can't add our own there
-  def self.target_resource
-    ENV['CHEFHELP_RESOURCE_NAME']
+class ChefHelp
+  def self.show_usage
+      puts "\nUsage: \n"
+      puts "\tchef-help <chef resource name>"
+      puts
+      puts "\tchef-help outputs the names of the attributes for the specified\n"
+      puts "\tChef resource, along with (limited) type information if available."
+      puts
+      puts "\tDetailed information on Chef resources may be found at http://docs.chef.io/search.html."
+      puts
   end
 
-  if target_resource.nil? || target_resource.length <= 0
-    puts "\nUsage: \n"
-    puts "\tchef-help <chef resource name>"
-    puts
-    puts "\tchef-help outputs the names of the attributes for the specified\n"
-    puts "\tChef resource, along with (limited) type information if available."
-    puts
-    puts "\tDetailed information on Chef resources may be found at http://docs.chef.io/search.html."
-    puts
-    exit 1
-  end
+  def self.for_command_argument
+    target_resource = (ARGV[0] != nil && ARGV[0].length > 0) ? ARGV[0] : nil
 
-  def self.resource_display
-    Proc.new do
-      colorizer = HighLine.new
-      puts "\n* Resource: #{colorizer.color(::ChefHelp.target_resource, :green)}"
-      action :nothing
+    if ! target_resource || target_resource.length <= 0
+      show_usage
+      exit 1
+    end
 
-      puts "  - Chef Version: #{::Chef::VERSION}"
-      puts "  + Attributes:"
-
-      (self.methods - ::Chef::Resource.instance_methods).sort.each do | attribute |
-        if (attribute.to_s =~ /\?|\=/).nil?
-          # Catch exceptions to handle methods that aren't attributes
-          # and require extra arguments
-          begin
-            attribute_type = self.send(attribute).class
-            attribute_type_name = attribute_type != NilClass ? attribute_type.to_s : ''
-            puts "    - #{colorizer.color(attribute.to_s, :cyan)} #{attribute_type_name}"
-          rescue
-          end
-        end
-      end
-
-      puts "  + Actions:"
-
-      allowed_actions.sort.each do | action |
-        puts "    - #{colorizer.color(action.to_s, :yellow)}"
-      end
+    begin
+      help = ChefHelp.new(target_resource)
+      help.show
+    rescue
+      exit 1
     end
   end
+
+  def initialize(target_resource)
+    @target_resource = target_resource
+    @colorizer = HighLine.new
+
+    resource_class = ::Chef::Resource.resource_matching_short_name(@target_resource)
+
+    if resource_class
+      empty_events = Chef::EventDispatch::Dispatcher.new
+      node = Chef::Node.new
+      anonymous_run_context = Chef::RunContext.new(node, {}, empty_events)
+      @resource_instance = resource_class.new('resource_help', anonymous_run_context)
+    else
+      $stderr.puts "#{@colorizer.color('Error: specified resource \'', :red)}#{@colorizer.color(@target_resource, :red)}#{@colorizer.color('\' was not found.', :red)}"
+      raise 'Resource does not exist'
+    end
+  end
+
+  def show
+    puts "\n* Resource: #{@colorizer.color(@target_resource, :green)}"
+    @resource_instance.action :nothing
+
+    puts "  - Chef Version: #{::Chef::VERSION}"
+    puts "  + Attributes:"
+
+    (@resource_instance.methods - ::Chef::Resource.instance_methods).sort.each do | attribute |
+      if (attribute.to_s =~ /\?|\=/).nil?
+        # Catch exceptions to handle methods that aren't attributes
+        # and require extra arguments
+        begin
+          attribute_type = @resource_instance.send(attribute).class
+          attribute_type_name = attribute_type != NilClass ? attribute_type.to_s : ''
+          puts "    - #{@colorizer.color(attribute.to_s, :cyan)} #{attribute_type_name}"
+        rescue
+        end
+      end
+    end
+
+    puts "  + Actions:"
+
+    @resource_instance.allowed_actions.sort.each do | action |
+      puts "    - #{@colorizer.color(action.to_s, :yellow)}"
+    end
+    puts
+  end
 end
 
-begin
-  self.send(::ChefHelp.target_resource, 'resource_help', &(::ChefHelp.resource_display))
-rescue NoMethodError
-  colorizer = HighLine.new
-  $stderr.puts "#{colorizer.color('Error: specified resource \'', :red)}#{colorizer.color(::ChefHelp.target_resource, :red)}#{colorizer.color('\' was not found.', :red)}"
-end
-puts
+ChefHelp.for_command_argument
+
