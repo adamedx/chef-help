@@ -11,7 +11,7 @@ http://docs.chef.io/search.html for Chef resource documentation.
 
 * On a [Chef-DK](https://github.com/chef/chef-dk)-enabled workstation
 when authoring Chef recipes
-* Scenarios involving debugging of systems running `chef-client
+* Scenarios involving debugging of systems running `chef-client`
 
 ## Prerequisites
 

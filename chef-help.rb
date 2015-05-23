@@ -21,14 +21,15 @@ require 'highline'
 
 class ChefHelp
   def self.show_usage
-      puts "\nUsage: \n"
-      puts "\tchef-help <chef resource name>"
-      puts
-      puts "\tchef-help outputs the names of the attributes for the specified\n"
-      puts "\tChef resource, along with (limited) type information if available."
-      puts
-      puts "\tDetailed information on Chef resources may be found at http://docs.chef.io/search.html."
-      puts
+    puts "\nUsage: \n"
+    puts "\tchef-help <chef resource name>"
+    puts
+    puts "\tchef-help outputs the names of the properties (formerly known as attributes)"
+    puts "\tand actions for the specified Chef resource, along with (limited) type information"
+    puts "\tif available."
+    puts
+    puts "\tDetailed information on Chef resources may be found at https://docs.chef.io/search.html."
+    puts
   end
 
   def self.for_command_argument
