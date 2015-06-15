@@ -16,7 +16,21 @@
 # This is a script to dump information about resources. It assumes
 # that the chef gem is installed.
 
-require 'chef'
+require 'pp'
+require 'uri'
+require 'socket'
+require 'chef/config'
+require 'chef/providers'
+require 'chef/resource'
+require 'chef/resources'
+require 'chef/config_fetcher'
+require 'chef/exceptions'
+require 'chef/log'
+require 'chef/platform'
+require 'mixlib/cli'
+require 'tmpdir'
+require 'rbconfig'
+
 require 'highline'
 
 class ChefHelp
@@ -72,14 +86,18 @@ class ChefHelp
     puts "  - Chef Version: #{::Chef::VERSION}"
     puts "  + Attributes:"
 
+    identity_attr = @resource_instance.class.identity_attr || 'name'
+    identity_attr = identity_attr.to_s.downcase
+
     (@resource_instance.methods - ::Chef::Resource.instance_methods).sort.each do | attribute |
       if (attribute.to_s =~ /\?|\=/).nil?
+        identity = (identity_attr == attribute.to_s.downcase) ? " (Identity)" : ''
         # Catch exceptions to handle methods that aren't attributes
         # and require extra arguments
         begin
           attribute_type = @resource_instance.send(attribute).class
           attribute_type_name = attribute_type != NilClass ? attribute_type.to_s : ''
-          puts "    - #{@colorizer.color(attribute.to_s, :cyan)} #{attribute_type_name}"
+          puts "    - #{@colorizer.color(attribute.to_s, :cyan)} #{attribute_type_name}#{identity}"
         rescue
         end
       end
